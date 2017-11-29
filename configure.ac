@@ -3,23 +3,22 @@ dnl Process this file with autoconf to produce a configure script.
 # get rid of that stupid cache mechanism
 rm -f config.cache
 
-AC_INIT(epeg, 0.9.1.042, enlightenment-devel@lists.sourceforge.net)
-AC_PREREQ(2.52)
+AC_INIT([epeg],[0.9.1.042],[enlightenment-devel@lists.sourceforge.net])
+AC_PREREQ([2.69])
 AC_CONFIG_SRCDIR(configure.ac)
 
 AM_INIT_AUTOMAKE(1.6 dist-bzip2)
 AM_CONFIG_HEADER(config.h)
 
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CC
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 AC_C_CONST
 
-AC_LIBTOOL_WIN32_DLL
 define([AC_LIBTOOL_LANG_CXX_CONFIG], [:])dnl
 define([AC_LIBTOOL_LANG_F77_CONFIG], [:])dnl
-AC_PROG_LIBTOOL
+LT_INIT([win32-dll])
 
 VMAJ=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $1);}'`
 VMIN=`echo $PACKAGE_VERSION | awk -F. '{printf("%s", $2);}'`
@@ -39,7 +38,7 @@ my_libs="-ljpeg -lexif"
 AC_SUBST(my_includes)
 AC_SUBST(my_libs)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 epeg.pc
 epeg-uninstalled.pc
@@ -49,6 +48,7 @@ src/lib/Makefile
 src/bin/Makefile
 debian/changelog
 ])
+AC_OUTPUT
 
 
 #####################################################################
