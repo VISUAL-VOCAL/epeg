@@ -39,3 +39,4 @@ ${SOURCE_DIRECTORY}/autogen.sh
 cd ${BUILD_DIRECTORY}
 ${SOURCE_DIRECTORY}/configure --host=${TARGET_HOST} $*
 make
+make install-strip
