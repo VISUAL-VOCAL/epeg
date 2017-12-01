@@ -69,6 +69,9 @@ extern "C" {
     EAPI int           epeg_trim(Epeg_Image *im);
     EAPI void          epeg_close(Epeg_Image *im);
 
+    /* added by Visual Vocal to read the XMP packet, if any, in the file */
+    EAPI const void   *epeg_xmp_packet_get(Epeg_Image *im, int *size);
+
 #ifdef __cplusplus
 }
 #endif

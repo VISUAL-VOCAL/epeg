@@ -7,6 +7,7 @@ lib_LTLIBRARIES      = libepeg.la
 include_HEADERS      = Epeg.h
 libepeg_la_SOURCES  = \
 epeg_main.c \
+epeg_xmp.c \
 epeg_private.h
 
 libepeg_la_LIBADD       = @my_libs@
