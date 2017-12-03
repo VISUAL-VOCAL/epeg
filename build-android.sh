@@ -50,7 +50,6 @@ export ASFLAGS="${INCLUDE_DIRS} ${LIB_DIRS} ${ANDROID_CFLAGS}"
 export LDFLAGS="${INCLUDE_DIRS} ${LIB_DIRS} ${ANDROID_CFLAGS} -pie"
 
 cd ${SOURCE_DIRECTORY}
-#autoreconf -fiv
 mkdir --parents ${BUILD_DIRECTORY}
 export NOCONFIGURE=1
 ${SOURCE_DIRECTORY}/autogen.sh
