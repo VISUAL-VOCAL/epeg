@@ -16,6 +16,13 @@ echo IOS_PLATFORMDIR=IOS_PLATFORMDIR=${OS_PLATFORMDIR}
 IOS_SYSROOT=($IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS*.sdk)
 echo IOS_SYSROOT=${IOS_SYSROOT}
 
+DEBUG_CFLAGS=-O3
+INSTALL_TARGET=install-strip
+
+# uncomment these to enable debug symbols
+#DEBUG_CFLAGS=-g
+#INSTALL_TARGET=install
+
 #
 # ARMv7 (32-bit)
 #
@@ -30,9 +37,9 @@ LIB_DIRS="-L${LIBJPEGDIR}/lib -L${LIBEXIFDIR}/lib"
 
 export host_alias=arm-apple-darwin10
 export CC=${XCODE}/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-export CFLAGS="-mfloat-abi=softfp -isysroot ${IOS_SYSROOT[0]} -O3 -arch armv7 -miphoneos-version-min=8.0"
-export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
-export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
+export CFLAGS="-mfloat-abi=softfp -isysroot ${IOS_SYSROOT[0]} -arch armv7 -miphoneos-version-min=8.0 ${DEBUG_CFLAGS}"
+export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_CFLAGS}"
+export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_LDFLAGS}"
 
 cd ${SOURCE_DIRECTORY}
 mkdir -p ${BUILD_DIRECTORY}
@@ -46,7 +53,9 @@ sh ${SOURCE_DIRECTORY}/configure \
   $*
 
 make
-make install-strip
+make ${INSTALL_TARGET}
+# merge exif and jpeg into epeg
+ld ${BUILD_DIRECTORY}/src/lib/epeg_main.o ${BUILD_DIRECTORY}/src/lib/epeg_xmp.o -lexif -ljpeg ${LIB_DIRS} -r -x -exported_symbol \*epeg\* -S -o ${BUILD_DIRECTORY}/install/lib/libepeg_jpeg_exif.a
 
 #
 # ARMv7s (32-bit)
@@ -62,9 +71,9 @@ LIB_DIRS="-L${LIBJPEGDIR}/lib -L${LIBEXIFDIR}/lib"
 
 export host_alias=arm-apple-darwin10
 export CC=${XCODE}/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-export CFLAGS="-mfloat-abi=softfp -isysroot ${IOS_SYSROOT[0]} -O3 -arch armv7s -miphoneos-version-min=8.0"
-export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
-export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
+export CFLAGS="-mfloat-abi=softfp -isysroot ${IOS_SYSROOT[0]} -arch armv7s -miphoneos-version-min=8.0"
+export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_CFLAGS}"
+export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_LDFLAGS}"
 
 cd ${SOURCE_DIRECTORY}
 mkdir -p ${BUILD_DIRECTORY}
@@ -78,7 +87,9 @@ sh ${SOURCE_DIRECTORY}/configure \
   $*
 
 make
-make install-strip
+make ${INSTALL_TARGET}
+# merge exif and jpeg into epeg
+ld ${BUILD_DIRECTORY}/src/lib/epeg_main.o ${BUILD_DIRECTORY}/src/lib/epeg_xmp.o -lexif -ljpeg ${LIB_DIRS} -r -x -exported_symbol \*epeg\* -S -o ${BUILD_DIRECTORY}/install/lib/libepeg_jpeg_exif.a
 
 #
 # ARMv8 (64-bit)
@@ -94,9 +105,9 @@ LIB_DIRS="-L${LIBJPEGDIR}/lib -L${LIBEXIFDIR}/lib"
 
 export host_alias=aarch64-apple-darwin
 export CC=${XCODE}/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-export CFLAGS="-isysroot ${IOS_SYSROOT[0]} -O3 -arch arm64 -miphoneos-version-min=8.0 -funwind-tables"
-export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
-export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS}"
+export CFLAGS="-isysroot ${IOS_SYSROOT[0]} -arch arm64 -miphoneos-version-min=8.0 -funwind-tables"
+export CFLAGS="${CFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_CFLAGS}"
+export LDFLAGS="${LDFLAGS} ${INCLUDE_DIRS} ${LIB_DIRS} ${DEBUG_LDFLAGS}"
 
 cd ${SOURCE_DIRECTORY}
 mkdir -p ${BUILD_DIRECTORY}
@@ -110,17 +121,20 @@ sh ${SOURCE_DIRECTORY}/configure \
   $*
 
 make
-make install-strip
+make ${INSTALL_TARGET}
+# merge exif and jpeg into epeg
+ld ${BUILD_DIRECTORY}/src/lib/epeg_main.o ${BUILD_DIRECTORY}/src/lib/epeg_xmp.o -lexif -ljpeg ${LIB_DIRS} -r -x -exported_symbol \*epeg\* -S -o ${BUILD_DIRECTORY}/install/lib/libepeg_jpeg_exif.a
 
 #
 # Unified multi-architecture library
 #
 BUILD_DIRECTORY="${SOURCE_DIRECTORY}/output/ios-all"
 LIBNAME=libepeg.a
+INPUT_LIBNAME=libepeg_jpeg_exif.a
 cd ${SOURCE_DIRECTORY}
 mkdir -p ${BUILD_DIRECTORY}
 lipo -create -output ${BUILD_DIRECTORY}/${LIBNAME} \
-  -arch armv7 ${BUILD_DIRECTORY_ARMV7}/install/lib/${LIBNAME} \
-  -arch armv7s ${BUILD_DIRECTORY_ARMV7S}/install/lib/${LIBNAME} \
-  -arch arm64v8 ${BUILD_DIRECTORY_ARMV8}/install/lib/${LIBNAME}
+  -arch armv7 ${BUILD_DIRECTORY_ARMV7}/install/lib/${INPUT_LIBNAME} \
+  -arch armv7s ${BUILD_DIRECTORY_ARMV7S}/install/lib/${INPUT_LIBNAME} \
+  -arch arm64v8 ${BUILD_DIRECTORY_ARMV8}/install/lib/${INPUT_LIBNAME}
 
