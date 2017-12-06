@@ -179,7 +179,7 @@ epeg_decode_colorspace_set(Epeg_Image *im, Epeg_Colorspace colorspace)
  * @param x Rectangle X.
  * @param y Rectangle Y.
  * @param w Rectangle width.
- * @param h Rectangle height.
+ * @param h Rectangle height. If negative, the decoded pixels are flipped vertically.
  * @return Pointer to the top left of the requested pixel block.
  *
  * Return image pixels in the decoded format from the specified location
@@ -197,6 +197,17 @@ EAPI const void *
 epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
 {
     int xx, yy, ww, hh, bpp, ox, oy, ow, oh, iw, ih;
+    int flip;
+
+    if (h < 0)
+    {
+        flip = 1;
+        h = -h;
+    }
+    else
+    {
+        flip = 0;
+    }
 
     if (!im->pixels)
     {
@@ -245,7 +256,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox));
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -266,7 +278,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 3);
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -289,7 +302,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 3);
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -312,7 +326,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 3);
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -335,7 +350,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 4);
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -359,7 +375,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 4);
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -383,7 +400,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox));
             for (xx = x + ox; xx < ww; xx++)
             {
@@ -404,7 +422,8 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
         {
             unsigned char *s;
 
-            s = im->lines[yy] + ((x + ox) * bpp);
+            int yysrc = flip ? (hh - yy - 1 + y + oy) : yy;
+            s = im->lines[yysrc] + ((x + ox) * bpp);
             p = pix + ((((yy - y) * w) + ox) * 4);
             for (xx = x + ox; xx < ww; xx++)
             {
