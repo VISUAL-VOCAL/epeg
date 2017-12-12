@@ -34,7 +34,7 @@ AC_CHECK_LIB([jpeg], [main], [], [echo "libjpeg library not found. Please instal
 AC_CHECK_LIB([exif], [main], [], [echo "libexif library not found. Please install it before proceeding"; exit -1])
 
 my_includes=""
-my_libs="-ljpeg -lexif"
+my_libs="-Wl,-ljpeg -Wl,-lexif"
 AC_SUBST(my_includes)
 AC_SUBST(my_libs)
 

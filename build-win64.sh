@@ -23,6 +23,7 @@ export NM="x86_64-w64-mingw32-nm"
 export LDFLAGS="${INCLUDE_DIRS} ${LIB_DIRS} ${LDFLAGS}"
 export CPPFLAGS="${INCLUDE_DIRS} ${LIB_DIRS} -DBUILDING_DLL ${CPPFLAGS}"
 export CFLAGS="${INCLUDE_DIRS} ${LIB_DIRS} -DBUILDING_DLL ${CFLAGS}"
+export LIBS=-lm
 
 echo "$F: calling ./configure with env vars:"
 echo " CC = ${CC}"
