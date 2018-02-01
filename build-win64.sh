@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# uncomment to use libexif
+#export USE_LIBEXIF=1
+
 SOURCE_DIRECTORY="$(dirname $0)"
 cd ${SOURCE_DIRECTORY}
 PWD=`pwd`
@@ -9,9 +12,17 @@ BUILD_DIRECTORY_SUFFIX=output/win64
 BUILD_DIRECTORY="${SOURCE_DIRECTORY}/${BUILD_DIRECTORY_SUFFIX}"
 
 LIBJPEGDIR="${SOURCE_DIRECTORY}/../libjpeg-turbo/${BUILD_DIRECTORY_SUFFIX}/install"
+INCLUDE_DIRS="-I${LIBJPEGDIR}/include"
+LIB_DIRS="-L${LIBJPEGDIR}/lib"
+
+if [ -n "${USE_LIBEXIF+1}" ]
+then
 LIBEXIFDIR="${SOURCE_DIRECTORY}/../libexif/${BUILD_DIRECTORY_SUFFIX}/install"
-INCLUDE_DIRS="-I${LIBJPEGDIR}/include -I${LIBEXIFDIR}/include"
-LIB_DIRS="-L${LIBJPEGDIR}/lib -L${LIBEXIFDIR}/lib"
+INCLUDE_DIRS="${INCLUDE_DIRS} -I${LIBEXIFDIR}/include"
+LIB_DIRS="${LIB_DIRS} -L${LIBEXIFDIR}/lib"
+else
+CONFIGURE_EXIF=--without-exif
+fi
 
 TARGET_HOST="x86_64-pc-mingw32"
 
@@ -43,6 +54,7 @@ cd ${BUILD_DIRECTORY}
 ${SOURCE_DIRECTORY}/configure \
   --host=${TARGET_HOST} \
   --prefix=${BUILD_DIRECTORY}/install \
+  ${CONFIGURE_EXIF} \
   $*
 
 make

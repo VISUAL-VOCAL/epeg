@@ -13,7 +13,9 @@ static void          _epeg_fatal_error_handler(j_common_ptr cinfo);
 
 static const JOCTET fake_EOI[2] = { 0xFF, JPEG_EOI };
 
+#ifdef USE_LIBEXIF
 static ExifByteOrder exif_byte_order = EXIF_BYTE_ORDER_INTEL;
+#endif
 
 /**
  * Open a JPEG image by filename.
@@ -796,6 +798,118 @@ epeg_close(Epeg_Image *im)
     free(im);
 }
 
+#ifndef USE_LIBEXIF
+// Quick and dirty code to look for the exif orientation tag without using libexif.
+// Adapted from: http://sylvana.net/jpegcrop/jpegexiforient.c
+// Returns orientation value (1 through 8) or zero if not found.
+static int _epeg_quick_and_dirty_find_exif_orientation(const unsigned char* exif_data, unsigned int length)
+{
+    const int EXIF_MARKER_LEN = 6;
+    const int IFD_ENTRY_LEN = 12;
+
+    int set_flag;
+    int is_motorola; /* Flag for byte order */
+    unsigned int offset, number_of_tags, tagnum;
+
+    /* check for "Exif" */
+    if (length < EXIF_MARKER_LEN ||
+        exif_data[0] != 0x45 ||
+        exif_data[1] != 0x78 ||
+        exif_data[2] != 0x69 ||
+        exif_data[3] != 0x66 ||
+        exif_data[4] != 0 ||
+        exif_data[5] != 0)
+        return 0;
+
+    exif_data += EXIF_MARKER_LEN;
+    length -= EXIF_MARKER_LEN;
+
+    if (length < IFD_ENTRY_LEN) return 0; /* Length of an IFD entry */
+
+    /* Discover byte order */
+    if (exif_data[0] == 0x49 && exif_data[1] == 0x49)
+        is_motorola = 0;
+    else if (exif_data[0] == 0x4D && exif_data[1] == 0x4D)
+        is_motorola = 1;
+    else
+        return 0;
+
+    /* Check Tag Mark */
+    if (is_motorola) {
+        if (exif_data[2] != 0) return 0;
+        if (exif_data[3] != 0x2A) return 0;
+    }
+    else {
+        if (exif_data[3] != 0) return 0;
+        if (exif_data[2] != 0x2A) return 0;
+    }
+
+    /* Get first IFD offset (offset to IFD0) */
+    if (is_motorola) {
+        if (exif_data[4] != 0) return 0;
+        if (exif_data[5] != 0) return 0;
+        offset = exif_data[6];
+        offset <<= 8;
+        offset += exif_data[7];
+    }
+    else {
+        if (exif_data[7] != 0) return 0;
+        if (exif_data[6] != 0) return 0;
+        offset = exif_data[5];
+        offset <<= 8;
+        offset += exif_data[4];
+    }
+    if (offset > length - 2) return 0; /* check end of data segment */
+
+    /* Get the number of directory entries contained in this IFD */
+    if (is_motorola) {
+        number_of_tags = exif_data[offset];
+        number_of_tags <<= 8;
+        number_of_tags += exif_data[offset + 1];
+    }
+    else {
+        number_of_tags = exif_data[offset + 1];
+        number_of_tags <<= 8;
+        number_of_tags += exif_data[offset];
+    }
+    if (number_of_tags == 0) return 0;
+    offset += 2;
+
+    /* Search for Orientation Tag in IFD0 */
+    for (;;) {
+        if (offset > length - 12) return 0; /* check end of data segment */
+                                            /* Get Tag number */
+        if (is_motorola) {
+            tagnum = exif_data[offset];
+            tagnum <<= 8;
+            tagnum += exif_data[offset + 1];
+        }
+        else {
+            tagnum = exif_data[offset + 1];
+            tagnum <<= 8;
+            tagnum += exif_data[offset];
+        }
+
+        if (tagnum == 0x0112) break; /* found Orientation Tag */
+        if (--number_of_tags == 0) return 0;
+        offset += 12;
+    }
+
+    /* Get the Orientation value */
+    if (is_motorola) {
+        if (exif_data[offset + 8] != 0) return 0;
+        set_flag = exif_data[offset + 9];
+    }
+    else {
+        if (exif_data[offset + 9] != 0) return 0;
+        set_flag = exif_data[offset + 8];
+    }
+    if (set_flag > 8) return 0;
+
+    return set_flag;
+}
+#endif
+
 static Epeg_Image *
 _epeg_open_header(Epeg_Image *im)
 {
@@ -908,6 +1022,7 @@ _epeg_open_header(Epeg_Image *im)
             *	store it in im->in.orientation. Later, this will
             *	be written to the output jpeg Exif data.
             */
+#ifdef USE_LIBEXIF
             ExifData *ed = exif_data_new_from_data(m->data, m->data_length);
             if (ed) {
                 exif_byte_order = exif_data_get_byte_order(ed);
@@ -920,6 +1035,14 @@ _epeg_open_header(Epeg_Image *im)
                 }
             }
             exif_data_unref(ed);
+#else
+            // get the tag without using libexif
+            int orientation = _epeg_quick_and_dirty_find_exif_orientation(m->data, m->data_length);
+            if (orientation > 0)
+            {
+                im->in.orientation = orientation;
+            }
+#endif
         }
     }
     return im;
@@ -1164,6 +1287,7 @@ struct epeg_destination_mgr
     unsigned char *buf;
 };
 
+#ifdef USE_LIBEXIF
 /* Get an existing tag, or create one if it doesn't exist */
 static ExifEntry *init_tag(ExifData *exif, ExifIfd ifd, ExifTag tag)
 {
@@ -1177,6 +1301,7 @@ static ExifEntry *init_tag(ExifData *exif, ExifIfd ifd, ExifTag tag)
     }
     return entry;
 }
+#endif
 
 static int
 _epeg_encode(Epeg_Image *im)
@@ -1256,6 +1381,7 @@ _epeg_encode(Epeg_Image *im)
     }
     jpeg_start_compress(&(im->out.jinfo), TRUE);
 
+#ifdef USE_LIBEXIF
     /* Set the image options for Exif */
     ExifData *exif = exif_data_new();
     exif_data_set_option(exif, EXIF_DATA_OPTION_FOLLOW_SPECIFICATION);
@@ -1274,6 +1400,26 @@ _epeg_encode(Epeg_Image *im)
     jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 1, exif_data, exif_data_len);
     exif_data_unref(exif);
     free(exif_data);
+#else
+    if (im->in.orientation != 0)
+    {
+        // nasty, dirty way of writing the orientation to an basic EXIF blob
+        unsigned char orie = (unsigned char)im->in.orientation;
+        const unsigned char EXIF_BLOB[0x8c] =
+        {
+            0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00,
+            0x05, 0x00, 0x12, 0x01, orie, 0x00, 0x01, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x1A, 0x01,
+            0x05, 0x00, 0x01, 0x00, 0x00, 0x00, 0x4A, 0x00, 0x00, 0x00, 0x1B, 0x01, 0x05, 0x00, 0x01, 0x00,
+            0x00, 0x00, 0x52, 0x00, 0x00, 0x00, 0x28, 0x01, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00,
+            0x00, 0x00, 0x69, 0x87, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x01, 0x00,
+            0x00, 0x00, 0x03, 0x00, 0x00, 0x90, 0x07, 0x00, 0x04, 0x00, 0x00, 0x00, 0x30, 0x32, 0x31, 0x30,
+            0x00, 0xA0, 0x07, 0x00, 0x04, 0x00, 0x00, 0x00, 0x30, 0x31, 0x30, 0x30, 0x01, 0xA0, 0x03, 0x00,
+            0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE7,
+        };
+        jpeg_write_marker(&(im->out.jinfo), JPEG_APP0 + 1, EXIF_BLOB, sizeof(EXIF_BLOB));
+    }
+#endif
 
     /* Output comment if there is one */
     if (im->out.comment && *im->out.comment)

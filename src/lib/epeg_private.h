@@ -12,7 +12,15 @@
 #include <sys/stat.h>
 #include <setjmp.h>
 #include <jpeglib.h>
+
+#ifdef USE_LIBEXIF
 #include <libexif/exif-data.h>
+#else
+#undef  MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#undef  MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
 
 #include "config.h"
 

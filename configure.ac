@@ -31,10 +31,19 @@ dnl AC_CHECK_FUNCS(fmemopen)
 dnl AC_CHECK_FUNCS(open_memstream)
 
 AC_CHECK_LIB([jpeg], [main], [], [echo "libjpeg library not found. Please install it before proceeding"; exit -1])
-AC_CHECK_LIB([exif], [main], [], [echo "libexif library not found. Please install it before proceeding"; exit -1])
+
+AC_ARG_WITH([exif],
+    AS_HELP_STRING([--without-exif], [Build without libexif dependency]))
+
+AS_IF([test "x$with_exif" != "xno"],
+[AC_CHECK_LIB([exif], [main], [], [echo "libexif library not found. Please install it before proceeding"; exit -1])
+my_libs="-Wl,-lexif ${my_libs}"
+CFLAGS="${CFLAGS} -DUSE_LIBEXIF"
+CPPFLAGS="${CPPFLAGS} -DUSE_LIBEXIF"],
+[echo Building without libexif dependency])
 
 my_includes=""
-my_libs="-Wl,-ljpeg -Wl,-lexif"
+my_libs="-Wl,-ljpeg ${my_libs}"
 AC_SUBST(my_includes)
 AC_SUBST(my_libs)
 

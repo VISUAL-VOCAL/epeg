@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# uncomment to use libexif
+#export USE_LIBEXIF=1
+
 # Set these variables to suit your needs
 SOURCE_DIRECTORY="$(dirname $0)"
 cd ${SOURCE_DIRECTORY}
@@ -16,9 +19,17 @@ TOOLCHAIN_VERSION="4.9"
 ANDROID_VERSION="19"
 
 LIBJPEGDIR="${SOURCE_DIRECTORY}/../libjpeg-turbo/${BUILD_DIRECTORY_SUFFIX}/install"
+INCLUDE_DIRS="-I${LIBJPEGDIR}/include"
+LIB_DIRS="-L${LIBJPEGDIR}/lib"
+
+if [ -n "${USE_LIBEXIF+1}" ]
+then
 LIBEXIFDIR="${SOURCE_DIRECTORY}/../libexif/${BUILD_DIRECTORY_SUFFIX}/install"
-INCLUDE_DIRS="-I${LIBJPEGDIR}/include -I${LIBEXIFDIR}/include"
-LIB_DIRS="-L${LIBJPEGDIR}/lib -L${LIBEXIFDIR}/lib"
+INCLUDE_DIRS="${INCLUDE_DIRS} -I${LIBEXIFDIR}/include"
+LIB_DIRS="${LIB_DIRS} -L${LIBEXIFDIR}/lib"
+else
+CONFIGURE_EXIF=--without-exif
+fi
 
 # It should not be necessary to modify the rest
 TARGET_HOST=arm-linux-androideabi
@@ -62,6 +73,7 @@ sh ${SOURCE_DIRECTORY}/configure \
   CPPFLAGS="${CPPFLAGS}" \
   LDFLAGS="${LDFLAGS}" \
   LIBS=-lm \
+  ${CONFIGURE_EXIF} \
   --with-simd ${1+"$@"}
 
 make
