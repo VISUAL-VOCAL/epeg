@@ -71,7 +71,7 @@ epeg_file_open(const char *file)
  *
  * See also: epeg_file_open(), epeg_close()
  */
-EAPI EAPI Epeg_Image *
+EAPI Epeg_Image *
 epeg_memory_open(unsigned char *data, int size)
 {
     Epeg_Image *im;
@@ -804,8 +804,8 @@ epeg_close(Epeg_Image *im)
 // Returns orientation value (1 through 8) or zero if not found.
 static int _epeg_quick_and_dirty_find_exif_orientation(const unsigned char* exif_data, unsigned int length)
 {
-    const int EXIF_MARKER_LEN = 6;
-    const int IFD_ENTRY_LEN = 12;
+    const unsigned int EXIF_MARKER_LEN = 6;
+    const unsigned int IFD_ENTRY_LEN = 12;
 
     int set_flag;
     int is_motorola; /* Flag for byte order */
