@@ -69,8 +69,11 @@ extern "C" {
     EAPI int           epeg_trim(Epeg_Image *im);
     EAPI void          epeg_close(Epeg_Image *im);
 
-    /* added by Visual Vocal to read the XMP packet, if any, in the file */
+    /* added by Visual Vocal to read standard and extended XMP packets */
     EAPI const void   *epeg_xmp_packet_get(Epeg_Image *im, int *size);
+    EAPI const void   *epeg_xmp_ext_packet_chunk_get(Epeg_Image *im, const char *guid, unsigned int *chunkSize, unsigned int *chunkOffset, unsigned int *fullPacketSize, void **marker);
+    EAPI const void   *epeg_xmp_ext_packet_get(Epeg_Image *im, const char *guid, unsigned int maxSize, unsigned int *size);
+    EAPI void          epeg_xmp_ext_packet_free(const void *packet);
 
 #ifdef __cplusplus
 }
