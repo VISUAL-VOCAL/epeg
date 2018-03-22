@@ -20,6 +20,12 @@ void DebugPrintfA(const char *format, ...)
 #define DebugPrintf(format, ...)
 #endif
 
+#ifdef _WINDOWS
+#define STRNICMP _strnicmp
+#else
+#define STRNICMP strncasecmp
+#endif
+
 /**
 * Read the standard XMP packet, if any, in the file.
 * @param im A handle to an opened Epeg image.
@@ -105,7 +111,7 @@ epeg_xmp_ext_packet_chunk_get(
                 /* look for a matching GUID string */
                 unsigned int guidLen = 32;
                 if (dataLengthRemaining >= guidLen &&
-                    0 == _strnicmp((const char*)data, guid, guidLen))
+                    0 == STRNICMP((const char*)data, guid, guidLen))
                 {
                     DebugPrintf("epeg_xmp_ext_packet_chunk_get: found guid\n");
 
