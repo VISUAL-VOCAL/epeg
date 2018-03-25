@@ -157,6 +157,8 @@ epeg_xmp_ext_packet_chunk_get(
                             *marker = m->next;
                         }
 
+                        DebugPrintf("epeg_xmp_ext_packet_chunk_get: data=%p, dataLengthRemaining=%u, chunkSize=%u, chunkOffset=%u\n", data, dataLengthRemaining, *chunkSize, *chunkOffset);
+
                         return (dataLengthRemaining > 0) ? data : NULL;
                     }
                 }
