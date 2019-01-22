@@ -30,5 +30,5 @@ epeg.c
 epeg.pc
 epeg-uninstalled.pc
 epeg.spec
-output/
-win64vs/.vs/
+build/
+.vs/

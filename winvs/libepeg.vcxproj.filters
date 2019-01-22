@@ -9,5 +9,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\lib\epeg_main.c" />
     <ClCompile Include="..\src\lib\epeg_xmp.c" />
+    <ClCompile Include="..\src\lib\epeg_create.c" />
   </ItemGroup>
 </Project>

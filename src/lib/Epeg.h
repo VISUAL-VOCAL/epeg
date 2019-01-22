@@ -75,6 +75,8 @@ extern "C" {
     EAPI const void   *epeg_xmp_ext_packet_get(Epeg_Image *im, const char *guid, unsigned int maxSize, unsigned int *size);
     EAPI void          epeg_xmp_ext_packet_free(const void *packet);
 
+    EAPI Epeg_Image   *epeg_create(int w, int h, int stride, Epeg_Colorspace colorspace, const void* rawPixels);
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,7 +2,7 @@
 #include "epeg_private.h"
 
 #if defined(_WINDOWS) && defined(_DEBUG)
-void __declspec(dllimport) OutputDebugStringA(const char *s);
+#include <windows.h>
 
 #include <stdarg.h>
 void DebugPrintfA(const char *format, ...)
