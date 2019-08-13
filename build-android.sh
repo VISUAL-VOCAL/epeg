@@ -3,6 +3,11 @@
 # uncomment to use libexif
 #export USE_LIBEXIF=1
 
+if [ -z ${ANDROID_HOME+x} ]; then
+  echo "Build aborted: ANDROID_HOME not set. You should export it set to the location where your Android NDKs are installed. \n   ... e.g. export ANDROID_HOME=\"\$HOME/Library/Android\""
+  exit 1
+fi
+
 HOST_OS=$(uname -s)
 
 case $HOST_OS in
@@ -13,7 +18,7 @@ case $HOST_OS in
     HOST_TAG="darwin-x86_64"
     ;;
   *)
-    echo "Sorry, OS '$HOST_OS' is not supported"
+    echo "Build aborted: OS '$HOST_OS' is not supported"
     exit 1
     ;;
 esac
@@ -32,6 +37,11 @@ SYSROOT="${TOOLCHAIN}/sysroot"
 BUILD_PLATFORM="${HOST_TAG}"
 TOOLCHAIN_VERSION="4.9"
 
+if [ ! -d "$NDK_PATH" ]; then
+  echo "Build aborted: Could not find Android NDK installed at: $NDK_PATH"
+  echo "Did you install the correct NDK? Is your ANDROID_HOME set correctly?"
+  exit 1
+fi
 
 
 #
