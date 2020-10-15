@@ -30,4 +30,5 @@ epeg.c
 epeg.pc
 epeg-uninstalled.pc
 epeg.spec
-output/
+build/
+.vs/

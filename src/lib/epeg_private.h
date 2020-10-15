@@ -78,6 +78,8 @@ struct _Epeg_Image
         int                          quality;
         char                         thumbnail_info : 1;
     } out;
+
+    boolean                          isRawImage;
 };
 
 METHODDEF(void) _jpeg_decompress_error_exit(j_common_ptr cinfo);

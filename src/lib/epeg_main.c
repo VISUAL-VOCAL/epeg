@@ -71,7 +71,7 @@ epeg_file_open(const char *file)
  *
  * See also: epeg_file_open(), epeg_close()
  */
-EAPI EAPI Epeg_Image *
+EAPI Epeg_Image *
 epeg_memory_open(unsigned char *data, int size)
 {
     Epeg_Image *im;
@@ -200,6 +200,11 @@ epeg_pixels_get(Epeg_Image *im, int x, int y, int w, int h)
 {
     int xx, yy, ww, hh, bpp, ox, oy, ow, oh, iw, ih;
     int flip;
+
+    if (im->isRawImage)
+    {
+        return NULL;
+    }
 
     if (h < 0)
     {
@@ -466,6 +471,11 @@ EAPI const void *
 epeg_pixels_get_as_RGB8(Epeg_Image *im, int x, int y, int w, int h)
 {
     int xx, yy, ww, hh, bpp, ox, oy, ow, oh, iw, ih;
+
+    if (im->isRawImage)
+    {
+        return NULL;
+    }
 
     if (!im->pixels)
     {
@@ -741,10 +751,13 @@ EAPI int
 epeg_encode(Epeg_Image *im)
 {
     int ret;
-    if ((ret = _epeg_decode(im)) != 0)
-        return (ret == 2 ? 4 : 3);
-    if (_epeg_scale(im) != 0)
-        return 1;
+    if (!im->isRawImage)
+    {
+        if ((ret = _epeg_decode(im)) != 0)
+            return (ret == 2 ? 4 : 3);
+        if (_epeg_scale(im) != 0)
+            return 1;
+    }
     if (_epeg_encode(im) != 0)
         return 2;
     return 0;
@@ -759,10 +772,13 @@ epeg_encode(Epeg_Image *im)
 EAPI int
 epeg_trim(Epeg_Image *im)
 {
-    if (_epeg_decode_for_trim(im) != 0)
-        return 1;
-    if (_epeg_trim(im) != 0)
-        return 1;
+    if (!im->isRawImage)
+    {
+        if (_epeg_decode_for_trim(im) != 0)
+            return 1;
+        if (_epeg_trim(im) != 0)
+            return 1;
+    }
     if (_epeg_encode(im) != 0)
         return 1;
     return 0;
@@ -804,8 +820,8 @@ epeg_close(Epeg_Image *im)
 // Returns orientation value (1 through 8) or zero if not found.
 static int _epeg_quick_and_dirty_find_exif_orientation(const unsigned char* exif_data, unsigned int length)
 {
-    const int EXIF_MARKER_LEN = 6;
-    const int IFD_ENTRY_LEN = 12;
+    const unsigned int EXIF_MARKER_LEN = 6;
+    const unsigned int IFD_ENTRY_LEN = 12;
 
     int set_flag;
     int is_motorola; /* Flag for byte order */
@@ -1448,6 +1464,9 @@ _epeg_encode(Epeg_Image *im)
     while (im->out.jinfo.next_scanline < im->out.h)
         jpeg_write_scanlines(&(im->out.jinfo), &(im->lines[im->out.jinfo.next_scanline]), 1);
     jpeg_finish_compress(&(im->out.jinfo));
+
+    // if this image was created from raw pixels via epeg_create() then the encode has converted it into a standard epeg image
+    im->isRawImage = FALSE;
 
 done:
     if ((im->in.f) || (im->in.mem.data != NULL)) jpeg_destroy_decompress(&(im->in.jinfo));
